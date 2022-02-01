@@ -1,0 +1,111 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+  // "container/list"
+	// "sync/atomic"
+	"time"
+
+	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
+  // "gonum.org/v1/gonum/stat"
+
+)
+
+const (
+  currentstock = "TSLA"
+)
+
+
+type StockTrend struct {
+  Symbol string
+  Latestquote float64
+  Prevquote float64
+  Prices  []float64 //slice of prices  
+  Times []time.Time
+  Trend int
+  Trendpct float64
+}
+
+func NewStockTrend(s string) StockTrend {
+  a := StockTrend{}
+  a.Symbol = s
+  a.Latestquote = 0.0
+  a.Prevquote= 0.0
+  return a
+}
+
+func pctdiff(a float64, b float64) float64 {
+  return ((a - b)/b)
+}
+
+func main() {
+  stock := NewStockTrend(currentstock)
+	quoteHandler := func(q stream.Quote) {
+    if q.Symbol == stock.Symbol {
+      stock.Trendpct = pctdiff(q.AskPrice, stock.Latestquote)
+      switch {
+      case  stock.Trendpct>= 0.05:
+          stock.Trend = 1
+      case  stock.Trendpct > 0.05, stock.Trendpct < 0.5 :
+          stock.Trend = 0
+      case stock.Trendpct  <= 0.5 :
+          stock.Trend = -1 
+    }
+    }
+	  // time.Sleep(20 * time.Second)
+    fmt.Printf("stock: %+v\n", stock)
+    // fmt.Println(q)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// setting up cancelling upon interrupt
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, os.Interrupt)
+	go func() {
+		<-s
+		cancel()
+	}()
+
+	// Creating a client that connexts to iex
+	c := stream.NewStocksClient("iex")
+
+	if err := c.Connect(ctx); err != nil {
+		log.Fatalf("could not establish connection, error: %s", err)
+	}
+	fmt.Println("established connection")
+
+	// starting a goroutine that checks whether the client has terminated
+	go func() {
+		err := <-c.Terminated()
+		if err != nil {
+			log.Fatalf("terminated with error: %s", err)
+		}
+		fmt.Println("exiting")
+		os.Exit(0)
+	}()
+
+	time.Sleep(3 * time.Second)
+	// Adding TSLA trade subscription
+	if err := c.SubscribeToQuotes(quoteHandler, "TSLA"); err != nil {
+		log.Fatalf("error during subscribing: %s", err)
+	}
+	fmt.Println("subscribed to TSLA trades")
+
+	time.Sleep(3 * time.Second)
+	// Unsubscribing from AAPL quotes
+	if err := c.UnsubscribeFromQuotes("TSLA"); err != nil {
+		log.Fatalf("error during unsubscribing: %s", err)
+	}
+	fmt.Println("unsubscribed from TSLA quotes")
+
+	// and so on...
+	time.Sleep(100 * time.Second)
+	fmt.Println("we're done")
+}
+
