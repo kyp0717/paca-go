@@ -15,10 +15,11 @@ import (
 	// "github.com/joho/godotenv"
 )
 
-type Tracker struct{
-  userCancel 
-  
-
+type Track struct{
+  stock string
+  tap chan stream.Quote // source data
+  sink chan Last2Quotes
+  // usercancel
 }
 
 type Last2Quotes struct {
@@ -27,10 +28,11 @@ type Last2Quotes struct {
 	previousq float64
 }
 
+
 type QuoteChanMap map[string](chan stream.Quote)
 type QuoteChanSink chan<- Last2Quotes
 
-func creatQuoteChanMap(ls []string) QuoteChanMap {
+func (t Track) creatTap(ls []string) QuoteChanMap {
 	qMap := make(map[string](chan stream.Quote))
 	for _, v := range ls {
 		qMap[v] = make(chan stream.Quote)

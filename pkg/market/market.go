@@ -21,12 +21,18 @@ type stocklist []string
 type Market struct {
 	Status   int32
   StockList []string
-  Tracker
+  Tracker Track
 }
+
+type Trend interface {
+  track()
+}
+
 
 func TrackMarket() {
 	godotenv.Load("./env/.env")
 	MyStockList := []string{"TSLA", "AAPL"}
+  
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -57,8 +63,8 @@ func TrackMarket() {
 		os.Exit(0)
 	}()
 
-	qmap := creatQuoteChanMap(MyStockList)
-	spawnQuoteRoutines(qmap)
+	// qmap := creatQuoteChanMap(MyStockList)
+	// spawnQuoteRoutines(qmap)
 
 	qHandler := func(q stream.Quote) {
 		qmap[q.Symbol] <- q
@@ -79,4 +85,5 @@ func TrackMarket() {
 		log.Fatalf("error during unsubscribing: %s", err)
 	}
 	fmt.Println("unsubscribed from quotes")
+
 }
