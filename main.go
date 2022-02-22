@@ -5,59 +5,65 @@ import (
 	"fmt"
 	"log"
 	"os"
-  // "errors"
+
+	// "errors"
 	"os/signal"
 	// "sync/atomic"
 	"time"
+
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
+	"github.com/joho/godotenv"
 )
 
-
 type History struct {
-  Current Prices
-  Previous Prices
+	Current  Prices
+	Previous Prices
 }
 type Prices map[string]float64
 type PriceList map[string][2]float64
 
 type Last struct {
-  symbol string
-  latestq float64
-  previousq float64
+	symbol    string
+	latestq   float64
+	previousq float64
 }
 type QChanMap map[string](chan stream.Quote)
 
 func creatQChanMap(ls []string) QChanMap {
-  qMap := make(map[string](chan stream.Quote))
-  for _, v := range ls {
-    qMap[v] = make(chan stream.Quote)
-  }
-  return qMap
+	qMap := make(map[string](chan stream.Quote))
+	for _, v := range ls {
+		qMap[v] = make(chan stream.Quote)
+	}
+	return qMap
 }
 
-func creatQRoutines (QChans QChanMap ) {
-  for _, cc := range QChans {
-    go track(cc)
- }
+func creatQRoutines(QChans QChanMap) {
+	for _, cc := range QChans {
+		go track(cc)
+	}
 }
 
 func track(qchan <-chan stream.Quote) {
-  q := <- qchan
-  t := &Last{q.Symbol, q.AskPrice, 0.0}
-  for {
-    q := <-qchan
-    fmt.Println(q)
-    t.previousq = t.latestq
-    t.latestq = q.AskPrice
-    fmt.Printf("%v\n", t)
-    time.Sleep(3*time.Second)
-  }
+	q := <-qchan
+	t := &Last{q.Symbol, q.AskPrice, 0.0}
+	for {
+		q := <-qchan
+		// fmt.Println(q)
+		t.previousq = t.latestq
+		t.latestq = q.AskPrice
+		fmt.Printf("%v\n", t)
+		// time.Sleep(1 * time.Second)
+	}
 }
 
-
 func main() {
-  MyStockList := []string{"TSLA", "AAPL"}
+	MyStockList := []string{"TSLA", "AAPL"}
 
+	// err := godotenv.Load("~/projects/paca-go/.env")
+	err := godotenv.Load("./env/.env")
+	if err != nil {
+		fmt.Println("error: file not found")
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -69,6 +75,7 @@ func main() {
 		cancel()
 	}()
 
+	// stream.New
 	// Creating a client that connexts to iex
 	c := stream.NewStocksClient("iex")
 
@@ -87,12 +94,12 @@ func main() {
 		os.Exit(0)
 	}()
 
-  qmap := creatQChanMap(MyStockList)
-  creatQRoutines(qmap)
+	qmap := creatQChanMap(MyStockList)
+	creatQRoutines(qmap)
 
-  qHandler := func(q stream.Quote) {
-    qmap[q.Symbol] <- q
-  }
+	qHandler := func(q stream.Quote) {
+		qmap[q.Symbol] <- q
+	}
 	// time.Sleep(3 * time.Second)
 	// Adding TSLA trade subscription
 	if err := c.SubscribeToQuotes(qHandler, "TSLA", "AAPL"); err != nil {
@@ -101,13 +108,12 @@ func main() {
 	fmt.Println("subscribed to quotes")
 
 	// and so on...
-	time.Sleep(40 * time.Second)
+	time.Sleep(20 * time.Second)
 	fmt.Println("we're done")
 
 	// Unsubscribing from AAPL quotes
-	if err := c.UnsubscribeFromQuotes("TSLA","AAPL"); err != nil {
+	if err := c.UnsubscribeFromQuotes("TSLA", "AAPL"); err != nil {
 		log.Fatalf("error during unsubscribing: %s", err)
 	}
 	fmt.Println("unsubscribed from quotes")
 }
-

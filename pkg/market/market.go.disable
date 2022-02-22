@@ -1,4 +1,5 @@
 package market
+
 import (
 	"context"
 	"fmt"
@@ -19,20 +20,23 @@ type PriceList map[string][2]float64
 type stocklist []string
 
 type Market struct {
-	Status   int32
-  StockList []string
-  Tracker Track
+	Status    int32
+	StockList []string
+	Tracker   Track
 }
 
 type Trend interface {
-  track()
+	track()
 }
 
+func Loadenv() {
+	godotenv.Load("./env/.env")
+	// key = os.Getenv('')
+}
 
 func TrackMarket() {
-	godotenv.Load("./env/.env")
-	MyStockList := []string{"TSLA", "AAPL"}
-  
+	// godotenv.Load("./env/.env")
+	// MyStockList := []string{"TSLA", "AAPL"}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -67,7 +71,7 @@ func TrackMarket() {
 	// spawnQuoteRoutines(qmap)
 
 	qHandler := func(q stream.Quote) {
-		qmap[q.Symbol] <- q
+		// qmap[q.Symbol] <- q
 	}
 	// time.Sleep(3 * time.Second)
 	// Adding TSLA trade subscription

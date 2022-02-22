@@ -41,16 +41,15 @@ func (t Track) createSink() (chan Last2Quotes){
 	return cc
 }
 
-func (t Track) generate(c stream.StocksClient) {
+// generator function that will stream quote 
+func (t Track) generate(c stream.StocksClient ) {
     c.SubscribeToQuotes(t.track, t.stock)
-		go t.track()
+		go t.track(q)
 }
-
 
 // extract stock quote from channel and insert into data type
 func (t Track) track(q stream.Quote) {
   // t.stock = s
-	t.TapChan
   l := &Last2Quotes{q.AskPrice, 0.0}
   // t.Last = l
 	for {
