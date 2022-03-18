@@ -14,7 +14,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func TestGetPrices(t *testing.T) {
+func TestStream(t *testing.T) {
   sink := make(chan LatestQuotes)
 	go func() {
     for {
@@ -31,8 +31,7 @@ func TestGetPrices(t *testing.T) {
 	}
 	// stream.New
 	// Creating a client that connexts to iex
-	c1 := stream.NewStocksClient("iex")
-	// c2 := stream.NewStocksClient("iex")
+	c := stream.NewStocksClient("iex")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -45,17 +44,14 @@ func TestGetPrices(t *testing.T) {
 		cancel()
 	}()
 
-	if err := c1.Connect(ctx); err != nil {
+	if err := c.Connect(ctx); err != nil {
 		log.Fatalf("could not establish connection, error: %s", err)
 	}
 
-	// if err := c2.Connect(ctx); err != nil {
-	// 	log.Fatalf("could not establish connection, error: %s", err)
-	// }
-  apple_chan := Qstream(&c1, "AAPL")
+  apple_chan := Qstream(&c, "AAPL")
   go GetPrices(apple_chan, sink)
 
-  tsla_chan := Qstream(&c1, "TSLA")
+  tsla_chan := Qstream(&c, "TSLA")
   go GetPrices(tsla_chan, sink)
 
 	// and so on...

@@ -1,83 +1,74 @@
 package market
-
 import (
 	// "context"
-	"fmt"
+	// "fmt"
+	// "fmt"
 	"log"
 	// "os"
 	// "errors"
 	// "os/signal"
-	"time"
+	// "time"
+
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
 )
 
-// Todo - test whether channels in struct is active when this object is created
-type QuoteStream struct {
-	conn     *stream.StocksClient
-	stock    string
-	Tap  chan stream.Quote  // source data - one per quote
-}
-
 type LatestQuotes struct {
-	symbol    string
+	// symbol   string
 	Latest   float64
 	Previous float64
 }
 
-// a bunch of side effects
-func NewStream(client *stream.StocksClient, s string) *QuoteStream {
-  qs := QuoteStream{}
-  qs.stock = s
-  qs.Tap = make(chan stream.Quote)
+func (l *LatestQuotes) update(c <-chan stream.Quote) {
+  q := <-c
+  l.Previous = l.Latest
+  l.Latest = q.AskPrice
+}
 
-  h := func(q stream.Quote) {
-	  qs.Tap <- q
-  }
-  err := (*client).SubscribeToQuotes(h, qs.stock)
-	if  err != nil {
+// // the closure is the function that is returned 
+// func makeHandler(c chan stream.Quote) (func(), (chan stream.Quote)) {
+//   c:= make(chan stream.Quote)
+//   return ((func(q stream.Quote) { c<-q }), c)
+// }
+//
+//
+// the closure is the function that is returned 
+func makeHandler() (func(q stream.Quote), (chan stream.Quote)) {
+  c:= make(chan stream.Quote)
+  return func(q stream.Quote) { c<-q }, c
+}
+
+
+
+
+// a bunch of side effects
+func Qstream(client *stream.StocksClient, s string) (chan stream.Quote) {
+  // qstream := make(chan stream.Quote)
+  // handler := makeHandler(qstream)
+  handler, c := makeHandler()
+	err := (*client).SubscribeToQuotes(handler, s)
+	// err := client.SubscribeToQuotes(handler, s)
+	if err != nil {
 		log.Fatalf("error during subscribing: %s", err)
 	}
-  // fmt.Printf("-- subscribed to quote: %s\n", s)
-  return &qs
+  return c
 }
 
-// func extract(qchan <-chan stream.Quote, sink chan<- LatestQuotes) {
-func (t *QuoteStream) Extract() {
-	q := <-t.Tap
-	lq := &LatestQuotes{q.Symbol, q.AskPrice, 0.0}
+func GetPrices(in <-chan stream.Quote,out chan<- LatestQuotes) {
+  l := LatestQuotes{0.0, 0.0}
 	for {
-		q := <-t.Tap
-		// fmt.Println(q)
-		lq.Previous = lq.Latest
-		lq.Latest= q.AskPrice
-		fmt.Printf("%v\n", t)
-		// time.Sleep(0.2 * time.Second)
+    l.update(in)
+    out<-l
 	}
 }
-func (t *QuoteStream) Stream(sink chan LatestQuotes) {
-  go func() {
-    q := <- t.Tap
-    lq := &LatestQuotes{t.stock, q.AskPrice, 0.0}
-    for {
-      q := <-t.Tap
-      // fmt.Println(q)
-      lq.Previous = lq.Latest
-      lq.Latest = q.AskPrice
-      // fmt.Printf("%v\n", lq)
-      // calculate price diff
-      time.Sleep(1 * time.Second)
-      sink <- *lq
-	}
-  }()
-}
 
-
-// func (t *QuoteStream) Stream2(sink chan LatestQuotes) {
-//   go extract(t.Tap, sink)
+//
+// func get_trend(in <-chan stream.Quote,trend chan<- float) {
+//   l := LatestQuotes{0.0, 0.0}
+// 	for {
+//     l.update(in)
+//     diff = l.Latest - l.Previous
+//     pct = diff/l.Latest
+//     if pct < -0.001 {
+//     }
+// 	}
 // }
-func (t *QuoteStream) Stream2() {
-  go t.Extract()
-}
-
-
-
