@@ -2,9 +2,8 @@ package market
 
 import (
 	"context"
-	"fmt"
 	"time"
-	// "fmt"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -15,15 +14,6 @@ import (
 )
 
 func TestStream(t *testing.T) {
-  sink := make(chan LatestQuotes)
-	go func() {
-    for {
-    l := <-sink
-    fmt.Println(l)
-    }
-	}()
-
-
 	// err := godotenv.Load("~/projects/paca-go/.env")
 	err := godotenv.Load()
 	if err != nil {
@@ -48,11 +38,14 @@ func TestStream(t *testing.T) {
 		log.Fatalf("could not establish connection, error: %s", err)
 	}
 
-  apple_chan := Qstream(&c, "AAPL")
-  go GetPrices(apple_chan, sink)
+  // create the map
+  qs := NewPacaStream()
+  qs.GetQuote("AAPL")
+  qs.GetQuote("TSLA")
+  // map has to exist first before adding handler
+  qs.AddHandler()
+  qs.Subscribe(c)
 
-  tsla_chan := Qstream(&c, "TSLA")
-  go GetPrices(tsla_chan, sink)
 
 	// and so on...
 	time.Sleep(15 * time.Second)
