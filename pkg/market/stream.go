@@ -5,9 +5,6 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
 )
 
-type Metric interface{
-  estimate(stream.Quote)  
-}
 
 // type quote string
 
@@ -16,13 +13,12 @@ type Metric interface{
 type PacaStream struct {
   // fan out to stock channel
   QuoteChannels map[string](chan stream.Quote) // fan out 
+  QuoteHandlers map[string](func(in <-chan stream.Quote, out chan<- Metric))
+  QuoteHandler func(in <-chan stream.Quote, out chan<- Metric)
   // handler which will fan out
   fanOutHandler func(q stream.Quote)
+
   // process the stock quote in the routine
-  // quoteHandler func(q stream.Quote) Metric 
-  // quoteHandler func(m Metric)
-  quoteHandler func(q stream.Quote) Metric
-  // quoteHandler Metric 
   // send the metric to the sink channel
   Sink chan Metric// fan in this channel
   // StockMetric Metric // type of calculation or analysis
@@ -47,34 +43,37 @@ func (qs *PacaStream) exist(q string) bool {
     return false }
 }
 
-// func (qs *PacaStream) AddProcessor()  {
-//   qs.metric = m
+// create channel for each stock (quote)
+// spawn thread to receive (pull) data from channel
+// func (qs *PacaStream) GetQuote(quote string, qtHandler func(in <-chan stream.Quote, out chan<- Metric) ) {
+// 		qs.QuoteChannels[quote] = make(chan stream.Quote)
+// 		// go processQuote(qs.QuoteChannels[quote], qs.Sink, quoteHandler)
+// 		go qtHandler(qs.QuoteChannels[quote], qs.Sink)
+// }
+
+// create channel for each stock (quote)
+// spawn thread to receive (pull) data from channel
+// func (qs *PacaStream) GetQuote(quote string, qtHandler func(in <-chan stream.Quote, out chan<- Metric) ) {
+// 		qs.QuoteChannels[quote] = make(chan stream.Quote)
+// 		// go processQuote(qs.QuoteChannels[quote], qs.Sink, quoteHandler)
+// 		go qtHandler(qs.QuoteChannels[quote], qs.Sink)
 // }
 
 // create channel for each stock (quote)
 // spawn thread to receive (pull) data from channel
 func (qs *PacaStream) GetQuote(quote string) {
-		qs.QuoteChannels[quote] = make(chan stream.Quote)
-		go processQuote(qs.QuoteChannels[quote], qs.Sink, qs.quoteHandler)
+  // make the channel for the quote
+	qs.QuoteChannels[quote] = make(chan stream.Quote)
+  // make the function for the quote
+  // go processQuote(qs.QuoteChannels[quote], qs.Sink, quoteHandler)
+	go qs.QuoteHandler(qs.QuoteChannels[quote],qs.Sink)
 }
 
 
-// Process the quote based on the model provided
-// quote handler must be added first
-func processQuote(in <-chan stream.Quote, out chan<- Metric, qhandler func(stream.Quote) Metric)  {
-  for {
-    q := <-in
-    result := qhandler(q)
-    out<-result
-  }
+func (qs *PacaStream) AddQuoteHandler(f func(in <-chan stream.Quote, out chan<- Metric)) {
+  qs.QuoteHandler = f
 }
 
-func (qs *PacaStream) GetQuotes(ls []string) {
-  for _,q := range ls {
-		qs.QuoteChannels[q] = make(chan stream.Quote)
-		go processQuote(qs.QuoteChannels[q], qs.Sink, qs.quoteHandler)
-  }
-}
 // send each stock to its channel
 // need to make outside of initiation because need access to map
 // in other words, map need to be created first
@@ -82,15 +81,6 @@ func (qs *PacaStream) FanOut() {
 	qs.fanOutHandler = func(q stream.Quote) {
 		qs.QuoteChannels[q.Symbol] <- q
 	}
-}
-
-// func (qs *PacaStream) AddQuoteHandler(handler func(q stream.Quote) Metric) {
-//   qs.quoteHandler = handler
-// }
-
-
-func (qs *PacaStream) AddQuoteHandler(f func(q stream.Quote) Metric) {
-  qs.quoteHandler = f 
 }
 
 func (qs *PacaStream) Subscribe(client stream.StocksClient ) {

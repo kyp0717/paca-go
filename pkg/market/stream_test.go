@@ -13,27 +13,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type StockTrend struct {
-	symbol    string
-	latestq   float64
-	previousq float64
-  trend  float64 
-  sink chan Metric
-}
-
-// runs forever
-// return Metrics which is interface since metrics can be custom
-func (st *StockTrend) estimate(q stream.Quote) {
-  st.symbol = q.Symbol
-  st.latestq= q.AskPrice
-  st.previousq= 0.0
-	for {
-		st.previousq = st.latestq
-		st.latestq = q.AskPrice
-    st.sink<-st
-	}
-}
-
 func TestStream(t *testing.T) {
 	// err := godotenv.Load("~/projects/paca-go/.env")
 	err := godotenv.Load()
@@ -46,7 +25,6 @@ func TestStream(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	// setting up cancelling upon interrupt
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt)
@@ -58,10 +36,23 @@ func TestStream(t *testing.T) {
 	if err := c.Connect(ctx); err != nil {
 		log.Fatalf("could not establish connection, error: %s", err)
 	}
+
   
   // create the map
   // add sink channel
   qs := NewPacaStream()
+  qhandler:= func(in <-chan stream.Quote, out chan<- Metric) {
+    q := <-in
+    tr := StockTrend{}
+    tr.Init(q)
+    for {
+      q := <-in
+      tr.Update(q)
+      tr.GetTrend()
+      out<-&tr
+    }
+  }
+  qs.AddQuoteHandler(qhandler)
 // create a channel to receive stock quote and routine to read from channel
   qs.GetQuote("AAPL")   
   qs.GetQuote("TSLA")
@@ -69,8 +60,6 @@ func TestStream(t *testing.T) {
   // this handler redirect by fanning out to mulitple channels
   qs.FanOut()
 
-  L
-  qs.AddQuoteHandler(e estimate)
   // subscribe will kick of the stream by connecting to Paca
   qs.Subscribe(c)
 
