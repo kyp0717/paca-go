@@ -50,7 +50,7 @@ func track(qchan <-chan stream.Quote) {
 		q := <-qchan
 		// fmt.Println(q)
 		t.previousq = t.latestq
-		t.latestq = q.AskPrice
+	s	t.latestq = q.AskPrice
 		fmt.Printf("%v\n", t)
 		// time.Sleep(1 * time.Second)
 	}
