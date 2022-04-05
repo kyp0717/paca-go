@@ -37,7 +37,6 @@ func TestStream(t *testing.T) {
 		log.Fatalf("could not establish connection, error: %s", err)
 	}
 
-  
   // create the map
   // add sink channel
   qs := NewPacaStream()
@@ -63,6 +62,12 @@ func TestStream(t *testing.T) {
   // subscribe will kick of the stream by connecting to Paca
   qs.Subscribe(c)
 
+  go func() {
+    for {
+    a := <- qs.Sink
+    fmt.Println(a)
+    }
+  }()
 
 	// and so on...
 	time.Sleep(15 * time.Second)

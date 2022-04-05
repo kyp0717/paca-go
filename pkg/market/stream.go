@@ -45,22 +45,6 @@ func (qs *PacaStream) exist(q string) bool {
 
 // create channel for each stock (quote)
 // spawn thread to receive (pull) data from channel
-// func (qs *PacaStream) GetQuote(quote string, qtHandler func(in <-chan stream.Quote, out chan<- Metric) ) {
-// 		qs.QuoteChannels[quote] = make(chan stream.Quote)
-// 		// go processQuote(qs.QuoteChannels[quote], qs.Sink, quoteHandler)
-// 		go qtHandler(qs.QuoteChannels[quote], qs.Sink)
-// }
-
-// create channel for each stock (quote)
-// spawn thread to receive (pull) data from channel
-// func (qs *PacaStream) GetQuote(quote string, qtHandler func(in <-chan stream.Quote, out chan<- Metric) ) {
-// 		qs.QuoteChannels[quote] = make(chan stream.Quote)
-// 		// go processQuote(qs.QuoteChannels[quote], qs.Sink, quoteHandler)
-// 		go qtHandler(qs.QuoteChannels[quote], qs.Sink)
-// }
-
-// create channel for each stock (quote)
-// spawn thread to receive (pull) data from channel
 func (qs *PacaStream) GetQuote(quote string) {
   // make the channel for the quote
 	qs.QuoteChannels[quote] = make(chan stream.Quote)
@@ -68,7 +52,6 @@ func (qs *PacaStream) GetQuote(quote string) {
   // go processQuote(qs.QuoteChannels[quote], qs.Sink, quoteHandler)
 	go qs.QuoteHandler(qs.QuoteChannels[quote],qs.Sink)
 }
-
 
 func (qs *PacaStream) AddQuoteHandler(f func(in <-chan stream.Quote, out chan<- Metric)) {
   qs.QuoteHandler = f

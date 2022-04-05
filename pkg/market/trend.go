@@ -13,15 +13,15 @@ import (
 	// "github.com/joho/godotenv"
 )
 
-type Metric interface {
-  GetTrend() 
-}
+// type Metric interface {
+//   GetTrend() 
+// }
 
 type StockTrend struct {
-	symbol    string
-	latestq   float64
-	previousq float64
-  trend  string
+	Symbol    string
+	Latestq   float64
+	Previousq float64
+  Trend Direction
 }
 
 // type StockTrend struct {
@@ -29,22 +29,31 @@ type StockTrend struct {
 // }
 
 func (st *StockTrend) Init(q stream.Quote) {
-  st.symbol = q.Symbol
-  st.latestq= q.AskPrice
-  st.previousq= 0.0
+  st.Symbol = q.Symbol
+  st.Latestq= q.AskPrice
+  st.Previousq= 0.0
 }
 
 func (st *StockTrend) Update(q stream.Quote) {
-  st.latestq= q.AskPrice
-  st.previousq= st.latestq
+  st.Latestq= q.AskPrice
+  st.Previousq= st.Latestq
 }
 
-func (st *StockTrend) GetTrend() {
-  diff := st.latestq - st.previousq
+func (st *StockTrend) GetSymbol() string{
+  return st.Symbol
+}
+
+
+func (st *StockTrend) GetTrend() Direction {
+  return st.Trend
+}
+
+func (st *StockTrend) TransformQuote() {
+  diff := st.Latestq - st.Previousq
   if diff > 0 {
-    st.trend="Up"
+      st.Trend = Up
   } else {
-    st.trend="Down"
+    st.Trend = Down
   }
 }
 
