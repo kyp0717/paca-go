@@ -14,17 +14,18 @@ import (
 )
 
 // define metric type in another file (see trend.go file)
-
-
 func TestAlgo(t *testing.T) {
-  // Defines 2 types for algo
-  // type 1 - what is your metric you derive from quotes
-  // type 2 - aggregate the metrics into a decision
+  // Step 1: Defines algo type and the trade
+  // algo type - what type of algo such as trend
+  // trade - aggregate the metrics into a decision
 
-  stxlist := []string{"AAPL","TSLA"}
-  algo := NewAlgo(stxlist, "AMD")
+  // var tech Metric
+  techlist := []string{"AAPL","TSLA"}
+  tech_momemtum := NewAnalysis(techlist)
+  amd_trade := NewTrade("AMD")
+  algo := NewAlgo(tech_momemtum, amd_trade)
 
-	algo.HandleQuote = func(in <-chan stream.Quote, out chan<- Metric) {
+	algo.QuoteHandler = func(in <-chan stream.Quote, out chan<- Metric) {
 		q := <-in
 		tr := StockTrend{}
 		tr.Init(q)

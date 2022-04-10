@@ -5,24 +5,15 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
 )
 
-
-// type quote string
-
 // PacaQuote data structure stores a list of channels
 // Direct incoming message to the proper channel
 type PacaStream struct {
   // fan out to stock channel
   QuoteChannels map[string](chan stream.Quote) // fan out 
-  QuoteHandlers map[string](func(in <-chan stream.Quote, out chan<- Metric))
   QuoteHandler func(in <-chan stream.Quote, out chan<- Metric)
   // handler which will fan out
   fanOutHandler func(q stream.Quote)
-
-  // process the stock quote in the routine
-  // send the metric to the sink channel
   Sink chan Metric// fan in this channel
-  // StockMetric Metric // type of calculation or analysis
-  // MarketMetric Metric // type of calculation or analysis
   
 }
 
