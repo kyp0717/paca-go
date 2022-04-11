@@ -12,7 +12,7 @@ type Quote struct {
   in <-chan stream.Quote
   *Dispatcher
 }
-
+// quotes are fan out to channels
 type Dispatcher struct {
   // fan out to stock channel
   QuoteChannels map[string](chan stream.Quote) // fan out 
@@ -47,7 +47,7 @@ func (q Quote) Subscribe(client stream.StocksClient) {
  }
 }
 
-func (q Quote) Compute(sink chan<- Feature)  {
+func (q Quote) Compute2(sink chan<- Feature)  {
   var trend Feature
   qq := <-q.in
   tr = Trend{}
@@ -56,9 +56,15 @@ func (q Quote) Compute(sink chan<- Feature)  {
     q := <-in
     tr.Update(q)
     tr.GetTrend()
-    out<-&tr
+    sink<-&tr
   }
 }
+
+func (q Quote) Compute(s *StockHistory) *StockHistory  {
+  qq := <-q.in
+  s.Init(qq)
+}
+
 
 func (q Quote) Stream() {
   go q.Compute(sink)
