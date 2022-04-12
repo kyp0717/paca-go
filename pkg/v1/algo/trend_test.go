@@ -1,4 +1,4 @@
-package market
+package algo
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func TestStream(t *testing.T) {
+func TestTrend(t *testing.T) {
 	// err := godotenv.Load("~/projects/paca-go/.env")
 	err := godotenv.Load()
 	if err != nil {
@@ -39,38 +39,25 @@ func TestStream(t *testing.T) {
 
   // create the map
   // add sink channel
-  qs := NewPacaStream()
-  qhandler:= func(in <-chan stream.Quote, out chan<- StockTrend) {
-    q := <-in
-    tr := StockTrend{}
-    tr.Init(q)
-    for {
-      q := <-in
-      tr.Update(q)
-      tr.GetTrend()
-      out<-tr
-    }
-  }
-  qs.AddQuoteHandler(qhandler)
-// create a channel to receive stock quote and routine to read from channel
-  qs.GetQuote("AAPL")   
-  qs.GetQuote("TSLA")
-  // map (which holds channels) and threads have to exist first before adding handler
-  // this handler redirect by fanning out to mulitple channels
-  qs.FanOut()
+  dp := NewQuoteDispatcher()
+  amd := dp.GetQuote(c,"AMD")
+  tsla := dp.GetQuote(c,"TSLA")
 
-  // subscribe will kick of the stream by connecting to Paca
-  qs.Subscribe(c)
+   // Compute trend and send to sink channel
+  sectortrend := make(chan StockTrend)
+  amd.Compute(sectortrend)
+  tsla.Compute(sectortrend)
+
+  // stocktrend.Compute(Decision)
 
   go func() {
     for {
-    a := <- qs.Sink
-    fmt.Println(a)
+    v := <- sectortrend
+    fmt.Println(v)
     }
   }()
-
 	// and so on...
-	time.Sleep(15 * time.Second)
+	time.Sleep(2 * time.Second)
 	fmt.Println("we're done")
 
 }

@@ -1,72 +1,51 @@
 package algo
 
 import (
+	// "fmt"
 	"log"
+
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
 )
-type Symbol string
+type Symbol=string
 type Quote struct {
-  // Symbol
-  stock string
-  // symbol stream.Quote
-  in <-chan stream.Quote
-  *Dispatcher
+  Symbol
+  // *Dispatcher
 }
 // quotes are fan out to channels
-type Dispatcher struct {
+type QuoteDispatcher struct {
   // fan out to stock channel
-  QuoteChannels map[string](chan stream.Quote) // fan out 
+  Channels map[Symbol](chan stream.Quote) // fan out 
   // handler which will fan out
-  dispatch func(q stream.Quote)
+  Handler func(q stream.Quote)
 }
 
-func NewDispatcher() Dispatcher{
-  return Dispatcher{
-    QuoteChannels: make(map[string]chan stream.Quote),
-  }
-}
-
-// send each stock to its channel
-// need to make outside of initiation because need access to map
-// in other words, map need to be created first
-func (qh *Dispatcher) Dispatch() func(q stream.Quote){
+func NewQuoteDispatcher() QuoteDispatcher{
+  qc:= make(map[Symbol]chan stream.Quote)
   handler := func(q stream.Quote) {
-		qh.QuoteChannels[q.Symbol] <- q
+		qc[q.Symbol] <- q
+    // fmt.Println(q)
 	}
-  return handler
-}
-
-func NewQuote(s string, q *Dispatcher) Quote {
-  in := make(<-chan stream.Quote)
-  return Quote{in: in, Dispatcher: q}
-}
-
-func (q Quote) Subscribe(client stream.StocksClient) {
-  if err := client.SubscribeToQuotes(q.Dispatch(), q.stock); err != nil {
-      log.Fatalf("error during subscribing: %s", err)
- }
-}
-
-func (q Quote) Compute2(sink chan<- Feature)  {
-  var trend Feature
-  qq := <-q.in
-  tr = Trend{}
-  tr.Init(qq)
-  for {
-    q := <-in
-    tr.Update(q)
-    tr.GetTrend()
-    sink<-&tr
+  return QuoteDispatcher{
+    Channels: qc,
+    Handler: handler,
   }
 }
 
-func (q Quote) Compute(s *StockHistory) *StockHistory  {
-  qq := <-q.in
-  s.Init(qq)
+// func (d *QuoteDispatcher) GetQuote(client stream.StocksClient,s Symbol) (chan stream.Quote){
+//   d.Channels[s] = make(chan stream.Quote)
+//   if err := client.SubscribeToQuotes(d.Handler, s); err != nil {
+//       log.Fatalf("error during subscribing: %s", err)
+//   }
+//   return d.Channels[s] 
+// }
+
+func (d *QuoteDispatcher) GetQuote(client stream.StocksClient,s Symbol) QuoteStream{
+  d.Channels[s] = make(chan stream.Quote)
+  if err := client.SubscribeToQuotes(d.Handler, s); err != nil {
+      log.Fatalf("error during subscribing: %s", err)
+  }
+  return d.Channels[s] 
 }
-
-
-func (q Quote) Stream() {
-  go q.Compute(sink)
-}
-
+// pass work now to data structure in another file
+// there is no compute here since we are not transforming data
+// pure ETL process only

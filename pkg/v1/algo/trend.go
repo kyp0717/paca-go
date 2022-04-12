@@ -1,62 +1,75 @@
 package algo
 
-import "github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
-
+import (
+	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
+)
 
 type Trend int64
 const (
   Up Trend = iota
   Down
-  Same
+  None
   )
-// type Trend struct {}
+
+type StockTrend struct {
+  Symbol
+  Trend
+}
+
+func (t Trend) String() string {
+    // declare an array of strings
+    // ... operator counts how many
+    // items in the array (7)
+    names := [...]string{
+        "Up", 
+        "Down", 
+        "None"}
+    return names[t]
+}
 
 // type StockTrend chan<- Feature
-type StockHistory struct {
-	Symbol    string
-	Latestq   float64
-	Previousq float64
+type PriceHistory struct {
+	Symbol   
+	Latest   float64
+	Previous float64
 }
 
-type StockTrend=Trend
-// type StockTrend struct {
-//   Trend
-//   sink chan Trend
-// }
+type QuoteStream chan stream.Quote
 
+func (qs QuoteStream) Compute(sink chan<- StockTrend)  {
+  go func() {
+  sh:=PriceHistory{}
+  q:=<-qs
+  sh.Init(q)
+  for {
+    q:=<-qs
+    sh.Update(q)
+    st := sh.Transform()
+    sink<-st
+   }
+  }()
+}
 
-// type Stock string
-
-// type StockTrend struct {
-//   PriceHistory
-// }
-
-func (st *StockHistory) Init(q stream.Quote) {
+func (st *PriceHistory) Init(q stream.Quote) {
 	st.Symbol = q.Symbol
-	st.Latestq = q.AskPrice
-	st.Previousq = 0.0
+	st.Latest = q.AskPrice
+	st.Previous = 0.0
 }
 
-func (st *StockHistory) Update(q stream.Quote) {
-	st.Latestq = q.AskPrice
-	st.Previousq = st.Latestq
+func (st *PriceHistory) Update(q stream.Quote) {
+	st.Latest = q.AskPrice
+	st.Previous = st.Latest
 }
 
-func (st *StockHistory) GetSymbol() string {
-	return st.Symbol
-}
-
-
-func (st *StockHistory) Compute() StockTrend {
-	diff := st.Latestq - st.Previousq
+func (st *PriceHistory) Transform() StockTrend {
+	diff := st.Latest - st.Previous
 	switch {
-    case diff > 0: return Up 
-    case diff < 0: return Down
-    default: return Same
+    case diff > 0: return StockTrend{st.Symbol,Up} 
+    case diff < 0: return StockTrend{st.Symbol,Down}
+    default: return StockTrend{st.Symbol,None} 
 	}
 }
 
 
-func (st StockTrend) Sink(c chan<- Trend)  {
-   c<-st
-}
+
+
