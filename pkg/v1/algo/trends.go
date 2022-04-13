@@ -27,6 +27,9 @@ func (t Trend) String() string {
     return names[t]
 }
 
+func (t StockTrend) GetSymbol() string {
+    return t.Symbol
+}
 // type StockTrend chan<- Feature
 type PriceHistory struct {
 	Symbol   
@@ -34,8 +37,42 @@ type PriceHistory struct {
 	Previous float64
 }
 
-type QuoteStream chan stream.Quote
+type SectorTrend chan StockTrend
 
+// 
+func (st SectorTrend) Compute() (SectorStatus)  {
+  sink:= make(SectorStatus)
+  go func() {
+  trends := make(map[string]Trend)
+  for {
+    strend := <-st
+    stock := strend.GetSymbol()
+    trends[stock] = strend.Trend
+    count :=0
+    ups:=0
+    downs:=0
+    none:=0
+    for _, trend := range trends {
+      count++
+      switch trend {
+        case Up: ups++
+        case Down: downs++
+        case None: none++
+      }
+    }
+    // var upPct float64
+    upPct := float64(ups/count)
+    switch {
+      case (upPct > 0.75): sink<-Rally
+      case (upPct < 0.25): sink<-SellOff
+    }
+   }
+  }()
+  return sink
+}
+
+// determine trend status for each stock
+type QuoteStream chan stream.Quote
 func (qs QuoteStream) Compute(sink chan<- StockTrend)  {
   go func() {
   sh:=PriceHistory{}
