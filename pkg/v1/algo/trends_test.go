@@ -37,17 +37,11 @@ func TestTrend(t *testing.T) {
 		log.Fatalf("could not establish connection, error: %s", err)
 	}
 
-  // Define trade (ticker for short or long position)
-  // Define metrics (list of tickers to benchmark)
-  t := NewTrade("AMD")
-  bm := BenchMark(tech)
-  model:=NewModel(t,bm)
-  model.Run(c)
 
   // create the map
   // add sink channel
   dp := NewQuoteDispatcher()
-  amd := dp.GetQuote(c,"AMD")
+  appl := dp.GetQuote(c,"APPL")
   tsla := dp.GetQuote(c,"TSLA")
 
    // Compute trend and send to sink channel
@@ -57,9 +51,12 @@ func TestTrend(t *testing.T) {
   tsla.Compute(sectortrend)
 
   // calculate sector status based on stock trends fanning into channel 
-  // return a channel of Lj
+  // return a channel of 
   sectorStatus := sectortrend.Compute()
-  sectorStatus.Trade()
+
+  long_amd := NewTrade("AMD", Long)
+  long_amd.BenchMark(sectorStutus)
+  long_amd.Enter()
 
   go func() {
     for {

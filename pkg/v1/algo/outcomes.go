@@ -23,13 +23,14 @@ const (
 type SectorStatus chan Status
 type MarketStatus chan Status
 
-func (ss SectorStatus) Trade() {
+func (ss SectorStatus) Trade(t Trade) {
   go func() {
+
     for {
-    status<-ss
-    switch status {
-      case Rally: 
-      case SellOff:
+      status:=<-ss
+    switch {
+      case status == Rally && t.TradeType==Long: 
+      case status == SellOff && t.TradeType==Long: 
       }
     }
   }()
