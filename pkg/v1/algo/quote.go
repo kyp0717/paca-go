@@ -12,20 +12,20 @@ type Quote struct {
   // *Dispatcher
 }
 // quotes are fan out to channels
-type QuoteDispatcher struct {
+type Dispatcher struct {
   // fan out to stock channel
   Channels map[Symbol](chan stream.Quote) // fan out 
   // handler which will fan out
   Handler func(q stream.Quote)
 }
 
-func NewQuoteDispatcher() QuoteDispatcher{
+func NewDispatcher() Dispatcher{
   qc:= make(map[Symbol]chan stream.Quote)
   handler := func(q stream.Quote) {
 		qc[q.Symbol] <- q
     // fmt.Println(q)
 	}
-  return QuoteDispatcher{
+  return Dispatcher{
     Channels: qc,
     Handler: handler,
   }
@@ -39,7 +39,7 @@ func NewQuoteDispatcher() QuoteDispatcher{
 //   return d.Channels[s] 
 // }
 
-func (d *QuoteDispatcher) GetQuote(client stream.StocksClient,s Symbol) QuoteStream{
+func (d *Dispatcher) GetQuote(client stream.StocksClient,s Symbol) QuoteStream{
   d.Channels[s] = make(chan stream.Quote)
   if err := client.SubscribeToQuotes(d.Handler, s); err != nil {
       log.Fatalf("error during subscribing: %s", err)

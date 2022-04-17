@@ -38,6 +38,17 @@ func TestTrend(t *testing.T) {
 	}
 
 
+  long_amd := NewTrade("AMD", Long)
+  ok, err := long_amd.BenchMark(Tech)
+  if ok {
+    ok, err := long_amd.BenchMark(Market)
+    if ok {
+      long_amd.Enter()
+    }
+  }
+
+  
+
   // create the map
   // add sink channel
   dp := NewQuoteDispatcher()
@@ -47,7 +58,7 @@ func TestTrend(t *testing.T) {
    // Compute trend and send to sink channel
   // sectortrend := make(chan StockTrend)
   sectortrend := make(SectorTrend)
-  amd.Compute(sectortrend)
+  appl.Compute(sectortrend)
   tsla.Compute(sectortrend)
 
   // calculate sector status based on stock trends fanning into channel 
@@ -55,15 +66,14 @@ func TestTrend(t *testing.T) {
   sectorStatus := sectortrend.Compute()
 
   long_amd := NewTrade("AMD", Long)
-  long_amd.BenchMark(sectorStutus)
-  long_amd.Enter()
+  ok, err := long_amd.BenchMark(sectorStatus)
+  if ok {
+    long_amd.Enter()
+  } else 
+  {
+    panic("Bad timing! Don't trade!")
+  }
 
-  go func() {
-    for {
-    v := <- sectortrend
-    fmt.Println(v)
-    }
-  }()
 	// and so on...
 	time.Sleep(2 * time.Second)
 	fmt.Println("we're done")
