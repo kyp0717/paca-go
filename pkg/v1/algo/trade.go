@@ -9,6 +9,8 @@ type Trade struct {
   Dispatcher
   RestClient alpaca.Client
   StreamClient stream.StocksClient
+  strendchan chan StockTrend
+  benchmarkchan chan Status
 }
 
 
@@ -27,16 +29,23 @@ func (t Trade) AddClient(rc alpaca.Client, sc stream.StocksClient) {
   t.StreamClient = sc
 }
 
-func (t Trade) Init()  chan<- StockTrend {
-  tradingStockStat := make(chan<- StockTrend)
+func (t Trade) Stream()   {
+  pricetrend := make(chan StockTrend)
   go func(){
     q := t.GetQuote(t.StreamClient, t.Symbol)
-    q.Compute(tradingStockStat)
+    q.Compute(pricetrend)
   }()
-  return tradingStockStat
+  t.strendchan = pricetrend 
 }
 
-func (t Trade) Benchmark(sector []Symbol) (chan<- Status) {
+func (t Trade) Init(sector []string) bool {
+  t.Stream()
+  t.Benchmark(sector)
+  ok, _ := t.Evaluate()
+  return ok
+}
+
+func (t Trade) Benchmark(sector []Symbol) {
   sectorTrend := make(SectorTrend)
   for _, s := range sector {
     q := t.GetQuote(t.StreamClient, s)
@@ -45,14 +54,14 @@ func (t Trade) Benchmark(sector []Symbol) (chan<- Status) {
   // calculate sector status based on stock trends fanning into channel 
   // return a channel of 
   sectorStatus := sectorTrend.Compute()
-  return sectorStatus 
+  t.benchmarkchan = sectorStatus 
 }
 
-func (t Trade) InitEvaluate(sector chan Status, st chan StockTrend) (bool, error) {
+func (t Trade) Evaluate() (bool, error) {
   // if trade is Long and sector Rally and Position is Gain - Hold Position
   // else Sell Position
-  sectorStat :=<-sector 
-  stock :=<-st
+  sectorStat :=<-t.benchmarkchan
+  stock :=<-t.strendchan
   mktFavorable := false
   switch {
   case sectorStat == Rally && stock.Trend == Up && t.TradeType == Long: mktFavorable = true
@@ -66,36 +75,22 @@ func (t Trade) InitEvaluate(sector chan Status, st chan StockTrend) (bool, error
 }
 
 
-func (t Trade) Evaluate(sector chan Status, st chan StockTrend) (bool, error) {
-  pos, _ := t.RestClient.GetPosition(t.Symbol)
-  pnl := pos.UnrealizedPLPC
-  if pnl > decimal(0.05) {
-    t.RestClient.ClosePosition(t.Symbol)
+func (t Trade) Enter(ls []string) {
+  ok := t.Init(ls)
+  if !ok {
+    panic("bad")
   }
   
-  sectorStat :=<-sector 
-  stock :=<-st
-  mktFavorable := false
-  switch {
-  case sectorStat == Rally && stock.Trend == Up && t.TradeType == Long: mktFavorable = true
-  case sectorStat == SellOff && stock.Trend == Down && t.TradeType == Short: mktFavorable= true
-  case sectorStat == Random && t.TradeType == Short: mktFavorable= true
-  case sectorStat == Random && t.TradeType == Long: mktFavorable= true
-  case sectorStat == Unknown: mktFavorable=false
-  default: mktFavorable=false
-  }
-  return mktFavorable, nil
-}
-
-
-
-
-
-func (t Trade) Enter(s chan Status) {
-  t.RestClient.Buy(t.Symbol)
+  
+  t.RestClient.PlaceOrder(req alpaca.PlaceOrderRequest)
   go func() {
     for {
-      ok, _ := t.Evaluate(s)
+    pos, _ := t.RestClient.GetPosition(t.Symbol)
+    pnl := pos.UnrealizedPLPC
+    if pnl > decimal(0.05) {
+      t.RestClient.ClosePosition(t.Symbol)
+    }
+      ok, _ := t.Evaluate()
       if ok {
         continue
       } else {
