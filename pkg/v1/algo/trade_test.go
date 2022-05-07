@@ -15,7 +15,6 @@ import (
 )
 
 func TestTrade(t *testing.T) {
-  techSector := []string{"AAPL","TSLA"}
 	// err := godotenv.Load("~/projects/paca-go/.env")
 	err := godotenv.Load()
 	if err != nil {
@@ -49,14 +48,13 @@ func TestTrade(t *testing.T) {
   // create the map
   // add sink channel
   dp := NewDispatcher()
-  long_amd := NewTrade("AMD", Long, dp)
-  long_amd.AddClient(restclient, streamclient)
-  // check AMD stock movment
-  sectorStatusChan, _ := long_amd.Benchmark(techSector)
-  ok, err := long_amd.Evaluate(sectorStatusChan)
-    if ok {
-      // Initiate the trade by entering the position 
-      long_amd.Enter(sectorStatusChan)
-    }
+  techbm := NewBenchMark(dp,streamclient)
+  long_amd := NewTrade("AMD", Long, restclient)
+  done, err := long_amd.Enter(techbm)
+  if err!=nil  {
+    // Initiate the trade by entering the position 
+    fmt.Println("Bad trade.  Don't trade")
+  }
+  <-done
 
 }
