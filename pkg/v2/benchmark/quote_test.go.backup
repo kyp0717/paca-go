@@ -1,4 +1,4 @@
-package algo
+package quote
 
 import (
 	"context"

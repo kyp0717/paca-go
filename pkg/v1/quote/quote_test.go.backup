@@ -1,4 +1,4 @@
-package algo
+package quote
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func TestTrend(t *testing.T) {
+func TestQuote(t *testing.T) {
 	// err := godotenv.Load("~/projects/paca-go/.env")
 	err := godotenv.Load()
 	if err != nil {
@@ -37,45 +37,28 @@ func TestTrend(t *testing.T) {
 		log.Fatalf("could not establish connection, error: %s", err)
 	}
 
-
-  long_amd := NewTrade("AMD", Long)
-  ok, err := long_amd.BenchMark(Tech)
-  if ok {
-    ok, err := long_amd.BenchMark(Market)
-    if ok {
-      long_amd.Enter()
-    }
-  }
-
-  
-
   // create the map
   // add sink channel
   dp := NewQuoteDispatcher()
-  appl := dp.GetQuote(c,"APPL")
+  amd := dp.GetQuote(c,"AMD")
   tsla := dp.GetQuote(c,"TSLA")
 
-   // Compute trend and send to sink channel
-  // sectortrend := make(chan StockTrend)
-  sectortrend := make(SectorTrend)
-  appl.Compute(sectortrend)
-  tsla.Compute(sectortrend)
 
-  // calculate sector status based on stock trends fanning into channel 
-  // return a channel of 
-  sectorStatus := sectortrend.Compute()
+  go func() {
+    for {
+    a := <- amd
+    fmt.Println(a)
+    }
+  }()
 
-  long_amd := NewTrade("AMD", Long)
-  ok, err := long_amd.BenchMark(sectorStatus)
-  if ok {
-    long_amd.Enter()
-  } else 
-  {
-    panic("Bad timing! Don't trade!")
-  }
-
+  go func() {
+    for {
+    v := <- tsla
+    fmt.Println(v)
+    }
+  }()
 	// and so on...
-	time.Sleep(2 * time.Second)
+	time.Sleep(15 * time.Second)
 	fmt.Println("we're done")
 
 }

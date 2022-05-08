@@ -1,4 +1,4 @@
-package algo
+package benchmark
 
 import (
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
@@ -16,14 +16,13 @@ type Sector []string
 type BenchMark struct {
   Dispatcher
   Sector 
-  SectorTrend  // channel define in trends module
-  StreamClient stream.StocksClient
+  Trend  // channel define in trends module
+  // StreamClient stream.StocksClient
 }
 
-func NewBenchMark(dp Dispatcher, sc stream.StocksClient) BenchMark{
+func New(dp Dispatcher) BenchMark{
   return BenchMark{
     Dispatcher: dp,
-    StreamClient: sc,
    }
 }
 
@@ -33,17 +32,17 @@ func (b *BenchMark) addTechSector() {
 }
 
 // stream return channel
-func (b BenchMark) Stream() SectorStatus{
+func (b BenchMark) Stream(sc stream.StocksClient) SectorTrendChan{
   b.addTechSector()
 
-  b.SectorTrend = make(SectorTrend)
-  for _, stock := range b.Sector {
-    quotechan := b.GetQuote(b.StreamClient, stock)
+  sectorTrend := make(SectorTrendChan)
+  for _, ticker := range b.Sector {
+    quotechan := b.GetQuote(sc, ticker)
     // fan into this channel
-    quotechan.Compute(b.SectorTrend)
+    quotechan.Compute(sectorTrend)
   }
   // calculate sector status based on stock trends fanning into channel 
   // return a channel of 
-  return b.SectorTrend.Compute()
+  return sectorTrend
   // b.benchmarkchan = sectorStatus 
 }

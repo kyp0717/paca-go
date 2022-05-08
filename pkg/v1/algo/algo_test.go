@@ -12,9 +12,13 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v2/alpaca"
 	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
 	"github.com/joho/godotenv"
+
+  "paca-go/pkg/v1/trade"
+  "paca-go/pkg/v1/quote"
+  "paca-go/pkg/v1/benchmark"
 )
 
-func TestTrade(t *testing.T) {
+func TestAlgo(t *testing.T) {
 	// err := godotenv.Load("~/projects/paca-go/.env")
 	err := godotenv.Load()
 	if err != nil {
@@ -47,8 +51,8 @@ func TestTrade(t *testing.T) {
 
   // create the map
   // add sink channel
-  dp := NewDispatcher()
-  techbm := NewBenchMark(dp,streamclient)
+  dispatcher := quote.Dispatch()
+  tech_bm := benchmark.New(dispatcher,)
   long_amd := NewTrade("AMD", Long, restclient)
   done, err := long_amd.Enter(techbm)
   if err!=nil  {
