@@ -2,6 +2,7 @@ package  trade
 import (
   "fmt"
   "github.com/alpacahq/alpaca-trade-api-go/v2/alpaca"
+  "paca-go/pkg/v2/quote"
 	"github.com/shopspring/decimal"
 
   )

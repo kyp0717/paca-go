@@ -16,7 +16,7 @@ type Sector []string
 type BenchMark struct {
   Dispatcher
   Sector 
-  Trend  // channel define in trends module
+  // Trend  // channel define in trends module
   // StreamClient stream.StocksClient
 }
 
@@ -32,14 +32,16 @@ func (b *BenchMark) addTechSector() {
 }
 
 // stream return channel
-func (b BenchMark) Stream(sc stream.StocksClient) SectorTrendChan{
+func (b BenchMark) Stream(sc stream.StocksClient) TrendChan{
   b.addTechSector()
 
-  sectorTrend := make(SectorTrendChan)
+  sectorTrend := make(TrendChan)
+  priceChange := make(PriceChangeChan)
   for _, ticker := range b.Sector {
     quotechan := b.GetQuote(sc, ticker)
     // fan into this channel
-    quotechan.Compute(sectorTrend)
+    quotechan.Compute(priceChange)
+    priceChange.Compute(sectorTrend)
   }
   // calculate sector status based on stock trends fanning into channel 
   // return a channel of 

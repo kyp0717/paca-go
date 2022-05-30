@@ -1,7 +1,7 @@
 package benchmark
 
 import (
-	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
+	// "github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
 )
 
 type Trend int64
@@ -12,11 +12,11 @@ const (
   Unknown
   )
 
-type SectorTrendChan chan Trend 
+type TrendChan chan Trend 
 type MarketTrendChan chan Trend 
 
-func (pc PriceChangeChan ) Compute() SectorTrendChan  {
-  sink:= make(SectorTrendChan)
+func (pc PriceChangeChan ) Compute(sink TrendChan) {
+  // sink:= make(TrendChan)
   go func() {
   pricechanges := make(map[string]PriceMove)
   for {
@@ -42,7 +42,7 @@ func (pc PriceChangeChan ) Compute() SectorTrendChan  {
     }
    }
   }()
-  return sink
+  // return sink
 }
 
 
