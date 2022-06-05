@@ -1,16 +1,22 @@
-package  trade
-import (
-  "fmt"
-  "github.com/alpacahq/alpaca-trade-api-go/v2/alpaca"
-  "paca-go/pkg/v2/quote"
-	"github.com/shopspring/decimal"
+package trade
 
-  )
+import (
+	"fmt"
+	bm "paca-go/pkg/v2/benchmark"
+
+	"github.com/alpacahq/alpaca-trade-api-go/v2/alpaca"
+	"github.com/shopspring/decimal"
+	"github.com/alpacahq/alpaca-trade-api-go/v2/marketdata/stream"
+)
+
+// Trade type is used to track target asset, init and submit order
 type Trade struct {
-  Symbol
+  bm.Symbol
   TradeType
   RestClient alpaca.Client
-  strendchan chan StockTrend
+  // benchmark bm.BenchMark
+  sectorTrend bm.TrendChan
+  stockTrend bm.PriceChangeChan
 }
 
 type TradeType int
@@ -19,47 +25,63 @@ const (
   Short
 )
 
-func New(s Symbol, t TradeType, rc alpaca.Client ) Trade {
+func New(s bm.Symbol, rc alpaca.Client ) Trade {
   return Trade{Symbol: s, 
-    TradeType: t,
     RestClient : rc,
   }
 }
 
-func (t *Trade) check()   {
-  pricetrend := make(chan StockTrend)
-  go func(){
-    q := t.GetQuote(t.StreamClient, t.Symbol)
-    q.Compute(pricetrend)
-  }()
-  t.strendchan = pricetrend 
+// Start the benchmark stream so we can perform evaulation
+// The trading stock is also part of the stream
+func (t Trade) BenchMark(sc stream.StocksClient) {
+  benchmark := bm.New()
+  benchmark.AddTradingStock(t.Symbol)
+  // benchmark.Stream(sc)
+  t.sectorTrend = benchmark.StreamTrend(sc)
+  t.stockTrend = benchmark.StreamBase(sc)
 }
 
-func (t Trade) init(bm benchmark) bool {
-  t.Stream()
-  t.Benchmark(sector)
-  ok, _ := t.Evaluate()
-  return ok
-}
+// func (t Trade) init(bm benchmark) bool {
+//   t.Stream()
+//   t.Benchmark(sector)
+//   ok, _ := t.Evaluate()
+//   return ok
+// }
+
 
 func (t Trade) Evaluate() (bool, error) {
   // if trade is Long and sector Rally and Position is Gain - Hold Position
   // else Sell Position
-  sectorStat :=<-t.benchmarkchan
-  stock :=<-t.strendchan
+  sector :=<-t.sectorTrend
+  stock :=<-t.stockTrend
   mktFavorable := false
   switch {
-  case sectorStat == Rally && stock.Trend == Up && t.TradeType == Long: mktFavorable = true
-  case sectorStat == SellOff && stock.Trend == Down && t.TradeType == Short: mktFavorable= true
-  case sectorStat == Random && t.TradeType == Short: mktFavorable= true
-  case sectorStat == Random && t.TradeType == Long: mktFavorable= true
-  case sectorStat == Unknown: mktFavorable=false
+  case sector == bm.Rally && stock.PriceMove == bm.Up && t.TradeType == Long: mktFavorable = true
+  case sector == bm.SellOff && stock.PriceMove== bm.Down && t.TradeType == Short: mktFavorable= true
+  case sector == bm.Random && t.TradeType == Short: mktFavorable= true
+  case sector == bm.Random && t.TradeType == Long: mktFavorable= true
+  case sector == bm.Unknown: mktFavorable=false
   default: mktFavorable=false
   }
   return mktFavorable, nil
 }
 
-func (t Trade) Enter(bm BenchMark) (chan int, error) {
+func (t Trade) Enter()  {
+  t.submitOrder(100, t.Symbol, t.TradeType)
+}
+
+func (t Trade) EvalPosition() {
+    pos, _ := t.RestClient.GetPosition(t.Symbol)
+    pnl := pos.UnrealizedPLPC
+    threshold := decimal.NewFromFloat(0.05)
+    // t := *&threshold
+    if pnl.GreaterThan(threshold) {
+      t.RestClient.ClosePosition(t.Symbol)
+    }
+}
+
+
+func (t Trade) Enter2() (chan int, error) {
   done := make(chan int)
   ok := t.init(bm)
   if !ok {
@@ -87,6 +109,7 @@ func (t Trade) Enter(bm BenchMark) (chan int, error) {
   }()
   return done, nil
 }
+
 func (t Trade) Exit() {
 
 }
