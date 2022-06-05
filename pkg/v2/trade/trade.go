@@ -48,8 +48,7 @@ func (t Trade) BenchMark(sc stream.StocksClient) {
 //   return ok
 // }
 
-
-func (t Trade) Evaluate() (bool, error) {
+func (t Trade) evalTrade()  (bool, error){
   // if trade is Long and sector Rally and Position is Gain - Hold Position
   // else Sell Position
   sector :=<-t.sectorTrend
@@ -63,57 +62,49 @@ func (t Trade) Evaluate() (bool, error) {
   case sector == bm.Unknown: mktFavorable=false
   default: mktFavorable=false
   }
+  if !mktFavorable {
+      t.RestClient.ClosePosition(t.Symbol)
+  } 
   return mktFavorable, nil
 }
 
-func (t Trade) Enter()  {
-  t.submitOrder(100, t.Symbol, t.TradeType)
-}
-
-func (t Trade) EvalPosition() {
-    pos, _ := t.RestClient.GetPosition(t.Symbol)
-    pnl := pos.UnrealizedPLPC
-    threshold := decimal.NewFromFloat(0.05)
-    // t := *&threshold
-    if pnl.GreaterThan(threshold) {
-      t.RestClient.ClosePosition(t.Symbol)
-    }
-}
-
-
-func (t Trade) Enter2() (chan int, error) {
+func (t Trade) Enter() (chan int ) {
   done := make(chan int)
-  ok := t.init(bm)
-  if !ok {
-    panic("bad")
-  }
-  
   t.submitOrder(100, t.Symbol, t.TradeType)
-  go func() {
-    for {
+  for {
+    okpos, errpos := t.evalPosition()
+    oktrade, errtrade := t.evalTrade()
+    if !okpos || !oktrade {
+      done<-1 
+    } 
+   }
+  return done
+}
+
+
+func (t Trade) init () error  {
+  ok, err := t.evalTrade()
+  if err == nil {
+    if ok {
+      t.submitOrder(100, t.Symbol, t.TradeType)
+    }
+  } else {
+    return err
+  }
+  return nil
+}
+
+func (t Trade) evalPosition() (bool, error) {
     pos, _ := t.RestClient.GetPosition(t.Symbol)
     pnl := pos.UnrealizedPLPC
     threshold := decimal.NewFromFloat(0.05)
     // t := *&threshold
     if pnl.GreaterThan(threshold) {
       t.RestClient.ClosePosition(t.Symbol)
+      return false, nil
     }
-      ok, _ := t.Evaluate()
-      if ok {
-        continue
-      } else {
-        t.Exit()
-      }
-      
-    }
-  }()
-  return done, nil
+    return true, nil
 }
-
-func (t Trade) Exit() {
-
-}
-
 
 // Submit an order if quantity is above 0.
 func (t Trade) submitOrder(qty int, symbol string, tradeside TradeType) error {
