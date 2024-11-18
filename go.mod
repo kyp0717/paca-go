@@ -1,18 +1,19 @@
 module paca-go
 
-go 1.17
+go 1.22
 
 require (
 	github.com/alpacahq/alpaca-trade-api-go/v2 v2.2.1
+	github.com/alpacahq/alpaca-trade-api-go/v3 v3.6.0
 	github.com/joho/godotenv v1.4.0
+	github.com/shopspring/decimal v1.3.1
 	github.com/vmihailenco/msgpack/v5 v5.3.0
-	nhooyr.io/websocket v1.8.7
+	nhooyr.io/websocket v1.8.10
 )
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
-	github.com/klauspost/compress v1.11.0 // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
 )
