@@ -1,9 +1,13 @@
 package main
 
 import (
+  "time"
 	"fmt"
 	"log"
 	"os"
+
+	"paca-go/pkg/marketdata"
+	"paca-go/pkg/utils"
 
 	"github.com/alpacahq/alpaca-trade-api-go/v3/alpaca"
 	"github.com/joho/godotenv"
@@ -32,4 +36,16 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("%+v\n", *acct)
+
+  fmt.Printf(utils.GetTimeInDateFormat().String())
+
+	symbols := []string{"AAPL", "MSFT"}
+	// start := time.Date(2024, 11, 20, 30, 0, 0, time.UTC)
+	// end := time.Date(2024, 11, 20, 13, 30, 0, 10000000, time.UTC)
+  start := time.Date(2021, 8, 9, 13, 30, 0, 0, time.UTC)
+  end :=   time.Date(2021, 8, 9, 13, 30, 0, 10000000, time.UTC)
+
+  // marketdata.Trades(symbols,start,end)
+  marketdata.Trades(symbols,start,end)
+  
 }
