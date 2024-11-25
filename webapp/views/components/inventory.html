@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="inventory" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+
+</head>
+<body>
+    <!-- Dynamically load the header -->
+    <div id="headerbar" hx-get="/views/components/headerbar.html" hx-trigger="load"></div>
+
+    <div class="search-container">
+            <!-- Search form -->
+        <!-- Search form with dropdown menus -->
+        <form  action="/inventory" method="GET">
+            <!-- SKU dropdown -->
+            <select class="space15" name="sku" id="searchSKU" style="margin-left: 40px;">
+                <option value="">search by SKU</option>
+                <option value="SKU123">SKU123</option>
+                <option value="SKU124">SKU124</option>
+                <option value="SKU125">SKU125</option>
+            </select>
+
+            <!-- Category dropdown -->
+            <select class="space15" name="category" id="searchCategory">
+                <option value="">search by category</option>
+                <option value="Furniture">Furniture</option>
+                <option value="Lighting">Lighting</option>
+                <option value="Home Decor">Home Decor</option>
+            </select>
+
+            <!-- Type dropdown -->
+            <select class="space15" name="type" id="searchType">
+                <option value="">search by type</option>
+                <option value="All">all</option>
+                <option value="Single">single</option>
+                <option value="Component">component</option>
+            </select>
+
+            <button type="submit">Search</button>
+
+        </form>
+        <div class="item-icons i"   style="margin-right: 40px;font-weight:bold;">
+            <i class="fas fa-plus"  title="New item" style="float: right;"></i>
+        </div>
+    </div>
+
+
+    <!-- Dynamically load the Item Table -->
+    <div id="itemtable" hx-get="/views/components/itemlisting.html" hx-trigger="load"></div>
+ 
+</body>
+</html>

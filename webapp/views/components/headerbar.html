@@ -1,0 +1,35 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="index" content="width=device-width, initial-scale=1.0">
+    <title>headerbar</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org"></script>
+</head>
+
+<div class="navbar-container">
+    <a href="/views/components/index.html" class="company-name">
+        <img src="/assets/img/logo.jpg" alt="East West Furniture Logo" class="logo space10">
+    </a>
+
+    <div class="navbar-background">       
+        <div class="navbar-links">
+            <a href="/views/components/inventory.html"  class="navbar {{if eq .ActivePage "inventory.html"}}active{{end}}">Inventory</a>
+            <a href="/views/components/products.html"   class="navbar {{if eq .ActivePage "products.html"}}active{{end}}">Products</a>
+            <a href="/views/components/vendors.html"    class="navbar {{if eq .ActivePage "vendors.html"}}active{{end}}">Vendors</a>
+            <a href="/views/components/invoices.html"   class="navbar {{if eq .ActivePage "invoices.html"}}active{{end}}">Invoices</a>
+            <a href="/views/components/shipping.html"   class="navbar {{if eq .ActivePage "shipping.html"}}active{{end}}">Shipping</a>
+            <a href="//views/components/reports.html"   class="navbar {{if eq .ActivePage "reports.html"}}active{{end}}">Reports</a>            
+        </div>
+
+        <div class="right-section">
+            <div class="item-icons admin-icon" style="margin-right: 40px;">
+                <i class="fas fa-wrench" title="Admin"></i>
+            </div> 
+            <div class="item-icons admin-icon" style="margin-right: 40px;">
+                <i class="fas fa-cog" title="Setup"></i>
+            </div> 
+            <span class="username space10">Khanh Ky</span>
+        </div>
+    </div>
+</div>

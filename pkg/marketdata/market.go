@@ -15,7 +15,6 @@ import (
 	"github.com/alpacahq/alpaca-trade-api-go/v3/marketdata"
 )
 
-
 // Parameterized trades function
 func Trades(symbols []string, start, end time.Time) {
 	multiTrades, err := marketdata.GetMultiTrades(symbols, marketdata.GetTradesRequest{

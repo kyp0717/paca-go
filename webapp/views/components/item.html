@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="index" content="width=device-width, initial-scale=1.0">
+    <title>item</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org"></script>
+</head>
+<body>
+
+
+    <div class="collapsible-container">
+        <!-- Collapsible Header with Arrow, Icons, and Green Dot -->
+        <div class="collapsible-header" onclick="toggleCollapsible()">
+            <!-- Green dot to show the record is active -->
+            <span class="green-dot"></span>
+            <!-- Title (center aligned) -->
+            <div class="header-title">Item Detail</div>
+            <!-- Icons for update, delete, new record -->
+            <div class="header-icons">
+                <i class="fas fa-pencil-alt" title="Update"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                <i class="fas fa-trash-alt" title="Delete"></i>&nbsp;&nbsp;&nbsp;&nbsp;
+                <i class="fas fa-plus" title="New Record"></i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <!-- Arrow for collapsible functionality -->
+            <span id="arrow" class="arrow">&#9660;</span> <!-- Down Arrow initially -->
+        </div>
+
+        <!-- Collapsible Content -->
+        <div id="collapsibleContent" class="collapsible-content">
+            <div class="form-group">
+                <label>SKU</label>
+                <input type="text" id="sku" class="readonly-input" value="{{.SKU}}" readonly>
+
+                <label>Item Name</label>
+                <input type="text" id="itemName" class="readonly-input" value="{{.ItemName}}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="upc">UPC</label>
+                <input type="text" id="upc" class="readonly-input" value="{{.UPC}}" readonly>
+
+                <label for="type">Type</label>
+                <input type="text" id="type" class="readonly-input" value="{{.Type}}" readonly>
+
+                <label for="category">Category</label>
+                <input type="text" id="category" class="readonly-input" value="{{.Category}}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" class="readonly-input" value="{{.Description}}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="inventory">Inventory</label>
+                <input type="text" id="inventory" class="readonly-input" value="{{.Inventory}}" readonly>
+
+                <label for="qtyPerBox">Qty Per Box</label>
+                <input type="text" id="qtyPerBox" class="readonly-input" value="{{.QtyPerBox}}" readonly>
+
+                <label for="averageCost">Average Cost</label>
+                <input type="text" id="averageCost" class="readonly-input" value="{{.AverageCost}}" readonly>
+
+                <label for="averagePrice">Average Price</label>
+                <input type="text" id="averagePrice" class="readonly-input" value="{{.AveragePrice}}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="itemDimension">Item Dimension</label>
+                <input type="text" id="itemDimension" class="readonly-input" value="{{.ItemDimension}}" readonly>
+
+                <label for="length">Length</label>
+                <input type="text" id="length" class="readonly-input" value="{{.Length}}" readonly>
+
+                <label for="width">Width</label>
+                <input type="text" id="width" class="readonly-input" value="{{.Width}}" readonly>
+
+                <label for="height">Height</label>
+                <input type="text" id="height" class="readonly-input" value="{{.Height}}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="boxDimension">Box Dimension</label>
+                <input type="text" id="boxDimension" class="readonly-input" value="{{.BoxDimension}}" readonly>
+
+                <label for="boxLength">Box Length</label>
+                <input type="text" id="boxLength" class="readonly-input" value="{{.BoxLength}}" readonly>
+
+                <label for="boxWidth">Box Width</label>
+                <input type="text" id="boxWidth" class="readonly-input" value="{{.BoxWidth}}" readonly>
+
+                <label for="boxHeight">Box Height</label>
+                <input type="text" id="boxHeight" class="readonly-input" value="{{.BoxHeight}}" readonly>
+
+                <label for="boxWeight">Box Weight</label>
+                <input type="text" id="boxWeight" class="readonly-input" value="{{.BoxWeight}}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="availableDate">Available Date</label>
+                <input type="text" id="availableDate" class="readonly-input" value="{{.AvailableDate}}" readonly>
+
+                <label for="shippingMethod">Shipping Method</label>
+                <input type="text" id="shippingMethod" class="readonly-input" value="{{.ShippingMethod}}" readonly>
+
+                <label for="piecesContainer">Pieces per Container</label>
+                <input type="text" id="piecesContainer" class="readonly-input" value="{{.PiecesContainer}}" readonly>
+
+                <label for="ytdInventory">YTD Inventory</label>
+                <input type="text" id="ytdInventory" class="readonly-input" value="{{.YTDInventory}}" readonly>
+
+                <label for="supplier">Supplier</label>
+                <input type="text" id="supplier" class="readonly-input" value="{{.Supplier}}" readonly>
+
+                <label for="updateStamp">Last Updated</label>
+                <input type="text" id="updateStamp" class="readonly-input" value="{{.UpdateStamp}}" readonly>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCollapsible() {
+            var content = document.getElementById("collapsibleContent");
+            var arrow = document.getElementById("arrow");
+            if (content.classList.contains("show")) {
+                content.classList.remove("show");
+                arrow.innerHTML = "&#9660;"; // Down arrow
+            } else {
+                content.classList.add("show");
+                arrow.innerHTML = "&#9650;"; // Up arrow
+            }
+        }
+    </script>
+
+<div class="collapsible-container">
+    <!-- Collapsible Header with Arrow, Icons, and Green Dot -->
+    <div class="collapsible-header" onclick="toggleCollapsible()">
+        <!-- Green dot to show the record is active -->
+        <span class="green-dot"></span>
+        <!-- Title (center aligned) -->
+        <div class="header-title">Item Prices</div>
+
+        <!-- Arrow for collapsible functionality -->
+        <span id="arrow" class="arrow">&#9660;</span> <!-- Down Arrow initially -->
+    </div>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Cost</th>
+                <th>Inventory</th>
+                <th>Price</th>
+                <th>Price 7%</th>
+                <th>Price 10%</th>
+                <th>Price 15%</th>
+                <th>Price 19%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Items}} <!-- Assuming Items is passed from the backend -->
+            <tr class="collapsible" hx-get="/item/{{.SKU}}" hx-target="#details-{{.SKU}}" hx-swap="outerHTML">
+                <td>{{.Cost}}</td>
+                <td>{{.Inventory}}</td>
+                <td>{{.Price}}</td>
+                <td>{{.Price7}}</td>
+                <td>{{.Price10}}</td>
+                <td>{{.Price15}}</td>
+                <td>{{.Price19}}</td>
+            </tr>
+            <tr id="details-{{.SKU}}" class="hidden">
+                <td colspan="6">Loading...</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+    
+</body>
+</html>
