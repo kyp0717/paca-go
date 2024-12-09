@@ -5,17 +5,14 @@ import (
 	"log"
 	"os"
 
-	// "gorm.io/gorm/logger"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
-var PgDBConn *gorm.DB
+var PostGresConn *gorm.DB
 
-func PgConnectDB() {
-
+func ConnectDB() {
 	// Access DB credentials from environment
 	host := os.Getenv("db_host")
 	user := os.Getenv("db_user")
@@ -26,7 +23,6 @@ func PgConnectDB() {
 	fmt.Println("Starting connection with Postgres Db")
 	dsn := user + "://postgres:" + password + "@" + host + ":" + dbport + "/" + dbname + "?sslmode=disable"
 
-	//db, err := gorm.Open(postgres.Open(dsn) , &gorm.Config{})
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
@@ -38,13 +34,7 @@ func PgConnectDB() {
 
 	log.Println("Connection successful.")
 
-	PgDBConn = db
-
-	db.AutoMigrate(&User{}, &TodoPG{})
-	LoadUserTable()
-
-	db.AutoMigrate(&Item{})
-	LoadItemTable()
-
+	PostGresConn = db
+	db.AutoMigrate(&MinuteBar{})
 	fmt.Println("Data Migration complete.")
 }

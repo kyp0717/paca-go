@@ -1,4 +1,4 @@
-package marketdata
+package market
 
 import (
 	// "bufio"
